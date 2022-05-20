@@ -10,7 +10,7 @@ app.use(express.json());
 
 // all the http requests wil be here 
 app.get("/" , (req, res) => {
-    res.send("welcome to the node server!")
+    res.send({message:"welcome to the node server!"})
 })
 
 app.listen(port, () => {
