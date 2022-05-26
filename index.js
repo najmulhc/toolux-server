@@ -32,6 +32,19 @@ const run = async () => {
     console.log("connected with mongodb");
     const userCollection = client.db("users").collection("user");
     const productCollection = client.db("products").collection("product");
+    const orderCollection = client.db("orders").collection("order");
+    // for all orders
+    app.post("/order", varifyJWT, async (req, res) => {
+      if (req.token.role === "user") {
+        const  order  = req.body;
+        const result = await orderCollection.insertOne(order)
+        res.send(result)
+  
+      } else {
+        res.send({error: "you are not a authorised user!"})
+      }
+  
+    })
 
     // for product
     app.get("/product", async (req, res) => {
