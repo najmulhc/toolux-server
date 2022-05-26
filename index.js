@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, Admin, ObjectId } = require("mongodb");
+const { ObjectID } = require("bson");
 const uri = `mongodb+srv://admin:${process.env.PASSWORD}@database.mp0iy.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -38,6 +39,12 @@ const run = async () => {
       const result = await productCollection.find(query).toArray();
       res.send(result);
     });
+    app.get("/product/:id", async (req, res) => { 
+      const { id } = req.params; 
+      const query = { _id: ObjectId(id) }
+      const result = await productCollection.findOne(query)
+      res.send(result)
+    })
     app.post("/product", async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
