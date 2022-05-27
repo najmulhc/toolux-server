@@ -10,6 +10,7 @@ app.use(express.json());
 
 const { MongoClient, ServerApiVersion, Admin, ObjectId } = require("mongodb");
 const { ObjectID } = require("bson");
+const res = require("express/lib/response");
 const uri = `mongodb+srv://admin:${process.env.PASSWORD}@database.mp0iy.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -33,6 +34,10 @@ const run = async () => {
     const userCollection = client.db("users").collection("user");
     const productCollection = client.db("products").collection("product");
     const orderCollection = client.db("orders").collection("order");
+
+    app.get("/", (req, res) => {
+      res.send({test: "all is working" })
+    })
     // for all orders
     app.post("/order", varifyJWT, async (req, res) => {
       if (req.token.role === "user") {
@@ -55,8 +60,8 @@ const run = async () => {
     //for single user query
     app.get("/orders", async (req, res) => {
       const { user } = req.query;
-      const query = { user: user };
-      const result = await orderCollection.find(query).toArray
+      const query = { customer: user };
+      const result = await orderCollection.find(query).toArray();
       res.send(result)
     }) 
 
