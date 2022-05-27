@@ -34,9 +34,18 @@ const run = async () => {
     const userCollection = client.db("users").collection("user");
     const productCollection = client.db("products").collection("product");
     const orderCollection = client.db("orders").collection("order");
+    const reviewCollection = client.db("reviews").collection("review")
 
-    app.get("/", (req, res) => {
-      res.send({test: "all is working" })
+   // for reviews 
+    app.post("/review", varifyJWT, async (req, res) => {
+      if (req.token.role === "user") {
+        const { review } = req.body; 
+        const result = await reviewCollection.insertOne(review); 
+        res.send(result)
+      } else {
+        res.send({error: "You do not have permission to write a review."})
+      }
+      
     })
     // for all orders
     app.post("/order", varifyJWT, async (req, res) => {
