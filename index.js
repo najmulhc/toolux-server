@@ -36,14 +36,21 @@ const run = async () => {
     // for all orders
     app.post("/order", varifyJWT, async (req, res) => {
       if (req.token.role === "user") {
-        const  order  = req.body;
-        const result = await orderCollection.insertOne(order)
-        res.send(result)
-  
+        const order = req.body;
+        const result = await orderCollection.insertOne(order);
+        res.send(result);
       } else {
-        res.send({error: "you are not a authorised user!"})
+        res.send({ error: "you are not a authorised user!" });
       }
-  
+    });
+    app.get("/order", varifyJWT, async(req, res) => {
+      const query = {}
+      if (req.token.role === "admin") {
+        const result = await orderCollection.find(query).toArray();
+        res.send(result);
+      } else {
+        res.send({error: "you do not have permission to view all orders"})
+      }
     })
 
     // for product
@@ -52,12 +59,12 @@ const run = async () => {
       const result = await productCollection.find(query).toArray();
       res.send(result);
     });
-    app.get("/product/:id", async (req, res) => { 
-      const { id } = req.params; 
-      const query = { _id: ObjectId(id) }
-      const result = await productCollection.findOne(query)
-      res.send(result)
-    })
+    app.get("/product/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
     app.post("/product", async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
