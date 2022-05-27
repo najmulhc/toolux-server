@@ -51,7 +51,14 @@ const run = async () => {
       } else {
         res.send({error: "you do not have permission to view all orders"})
       }
-    })
+    }) 
+    //for single user query
+    app.get("/order/:user", async (req, res) => {
+      const { user } = req.params();
+      const query = { user: user };
+      const result = await orderCollection.find(query).toArray();
+      res.send(result);
+    }) 
 
     // for product
     app.get("/product", async (req, res) => {
