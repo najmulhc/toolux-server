@@ -34,45 +34,46 @@ const run = async () => {
     const userCollection = client.db("users").collection("user");
     const productCollection = client.db("products").collection("product");
     const orderCollection = client.db("orders").collection("order");
-    const reviewCollection = client.db("reviews").collection("review")
+    const reviewCollection = client.db("reviews").collection("review");
 
-   // for reviews 
-    app.post("/review", varifyJWT, async (req, res) => {
-      if (req.token.role === "user") {
-        const { review } = req.body; 
-        const result = await reviewCollection.insertOne(review); 
-        res.send(result)
-      } else {
-        res.send({error: "You do not have permission to write a review."})
-      }
-      
+    // for reviews
+    app.get("/review", async (req, res) => {
+      const query = {};
+      const basic = await reviewCollection.find(query).toArray();
+      const final = basic.reverse().splice(0, 3);
+      res.send(final);
     })
+    app.post("/review",  async (req, res) => {
+      const review  = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result)
+    });
     // for all orders
     app.post("/order", varifyJWT, async (req, res) => {
+      const order = req.body;
       if (req.token.role === "user") {
-        const order = req.body;
         const result = await orderCollection.insertOne(order);
         res.send(result);
       } else {
         res.send({ error: "you are not a authorised user!" });
       }
     });
-    app.get("/order", varifyJWT, async(req, res) => {
-      const query = {}
+    app.get("/order", varifyJWT, async (req, res) => {
+      const query = {};
       if (req.token.role === "admin") {
         const result = await orderCollection.find(query).toArray();
         res.send(result);
       } else {
-        res.send({error: "you do not have permission to view all orders"})
+        res.send({ error: "you do not have permission to view all orders" });
       }
-    }) 
+    });
     //for single user query
     app.get("/orders", async (req, res) => {
       const { user } = req.query;
       const query = { customer: user };
       const result = await orderCollection.find(query).toArray();
-      res.send(result)
-    }) 
+      res.send(result);
+    });
 
     // for product
     app.get("/product", async (req, res) => {
