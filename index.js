@@ -55,7 +55,9 @@ const run = async () => {
     //for single user query
     app.get("/orders", async (req, res) => {
       const { user } = req.query;
-      res.send({emailOfUser: user})
+      const query = { user: user };
+      const result = await orderCollection.find(query).toArray
+      res.send(result)
     }) 
 
     // for product
