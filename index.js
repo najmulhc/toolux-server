@@ -60,13 +60,11 @@ const run = async () => {
     });
     app.delete("/order", varifyJWT,  async (req, res) => {
       const { order } = req.body;
-      if (req.token.email === order.customer) {
+    
         const query = { _id: ObjectId(order._id) }
         const result = await orderCollection.deleteOne(query);
         res.send(result);
-      } else {
-        res.send({ error: "you can not delete this order" });
-      }
+ 
     })
     app.get("/order", varifyJWT, async (req, res) => {
       const query = {};
