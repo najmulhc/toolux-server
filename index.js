@@ -40,18 +40,19 @@ const run = async () => {
     const reviewCollection = client.db("reviews").collection("review");
 
     app.post("/create-payment-intent", async (req, res) => {
-      const { price } = req.body;
-    
-      // Create a PaymentIntent with the order amount and currency
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: price*100,
-        currency: "usd",
-        payment_method_types: ["card"]
-      });
-    
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
+      const { cost} = req.body; 
+      console.log(cost);
+      if (cost) {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: cost*100 ,
+          currency: "usd",
+          payment_method_types: ["card"]
+        });
+      
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+   }
     });
 
     // for reviews
@@ -76,9 +77,12 @@ const run = async () => {
         res.send({ error: "you are not a authorised user!" });
       }
     });
-    app.post("/orders",   async (req, res) => {
-      const { order } = req.body;
-         console.log(order)
+ 
+    app.delete("/order/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await orderCollection.deleteOne(query);
+      res.send(result);
     })
     app.get("/order/:id", async (req, res) => {
       const { id } = req.params;
@@ -102,6 +106,42 @@ const run = async () => {
       const result = await orderCollection.find(query).toArray();
       res.send(result);
     });
+    app.put("/order/:id", async (req, res) => {
+      const { id} = req.params;
+      const filter = { _id : ObjectId(id) };
+      const updated = req.body;
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...updated,
+        },
+      };
+      const result = await orderCollection.updateOne(filter, updateDoc, options);
+      res.send({ result: result });
+    });
+    app.put("/order/deliver/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) }
+      const order = await orderCollection.findOne(query)
+      const { productId } = order;
+      const productQuery = { _id: ObjectId(productId) };
+      const product = await productCollection.findOne(productQuery);
+      const currentStock = product.stock - order.quantity;
+      const updateProd = {
+        $set: {
+          stock: currentStock
+        }
+      }
+      const productResult = await productCollection.updateOne(productQuery, updateProd);
+      const updateOrd = {
+       $set: {
+          state:"delivered"
+        }
+      }
+      const orderResult = await orderCollection.updateOne(query, updateOrd);
+      console.log(productResult, orderResult);
+      res.send({test: "tes"})
+    })
 
     // for product
     app.get("/product", async (req, res) => {
@@ -148,7 +188,7 @@ const run = async () => {
         res.send({ error: "forbidden" });
       }
     });
-    // to make a user admin
+    // to make a user admin 
     app.put("/user/admin/:email", async (req, res) => {
       const { email } = req.params;
       const filter = { email };
