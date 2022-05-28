@@ -3,6 +3,8 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
+const Stripe = require("stripe");
+const stripe = Stripe('sk_test_51L3kPXCvrp1O0hXl6risEm9b18qNc2iJfz9tGadlGWRdUZdLHff44Vu9gXgDFi7dEodLWFVzLE3IjRUDVyqAPI8P00oBPe9vSP')
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -11,6 +13,7 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion, Admin, ObjectId } = require("mongodb");
 const { ObjectID } = require("bson");
 const res = require("express/lib/response");
+const req = require("express/lib/request");
 const uri = `mongodb+srv://admin:${process.env.PASSWORD}@database.mp0iy.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -36,6 +39,21 @@ const run = async () => {
     const orderCollection = client.db("orders").collection("order");
     const reviewCollection = client.db("reviews").collection("review");
 
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+    
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: price*100,
+        currency: "usd",
+        payment_method_types: ["card"]
+      });
+    
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
     // for reviews
     app.get("/review", async (req, res) => {
       const query = {};
@@ -58,13 +76,15 @@ const run = async () => {
         res.send({ error: "you are not a authorised user!" });
       }
     });
-    app.delete("/order", varifyJWT,  async (req, res) => {
+    app.post("/orders",   async (req, res) => {
       const { order } = req.body;
-    
-        const query = { _id: ObjectId(order._id) }
-        const result = await orderCollection.deleteOne(query);
-        res.send(result);
- 
+         console.log(order)
+    })
+    app.get("/order/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) }
+      const result = await orderCollection.findOne(query);
+      res.send(result)
     })
     app.get("/order", varifyJWT, async (req, res) => {
       const query = {};
