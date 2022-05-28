@@ -58,6 +58,14 @@ const run = async () => {
         res.send({ error: "you are not a authorised user!" });
       }
     });
+    app.delete("/order", varifyJWT,  async (req, res) => {
+      const { order } = req.body;
+      if (req.token.role === order.customer) {
+        const query = { _id: ObjectId(order._id) }
+        const result = await orderCollection.deleteOne(query);
+        res.send(result);
+      }
+    })
     app.get("/order", varifyJWT, async (req, res) => {
       const query = {};
       if (req.token.role === "admin") {
